@@ -9,15 +9,22 @@ var quizzQuestions = [{img: "img/geti.jpg", question: "Cum îi numeau grecii pe 
 					  {img: "img/vlad_tepes.jpg", question: "În noaptea zilei de 17 iunie 1462, Vlad Țepeș s-a luptat cu:", choices: ["Baiazid", "Soliman Pașa", "Suleiman Magnificul", "Mahomed al II-lea"], correctAnswer: 3},
 					  {img: "img/mihai_viteazu.jpg", question: "În ce an a avut loc unirea înfăptuită de Mihai Viteazul?", choices: ["1918", "1456", "1688", "1600", "1859"], correctAnswer: 3},
 					  {img: "img/constantin-brancoveanu.jpg", question: "Constantin Brâncoveanu a construit mănăstirea:", choices: ["Putna", "Hurezi", "Cozia", "Antim", "Curtea de Argeș"], correctAnswer: 1}],
-	featPhoto = document.getElementById("feat-photo"), // Store location for feat-photo element
+	featPhoto = document.getElementById("featPhoto"), // Store location for feat-photo element
 	currentQuestion = document.getElementById("cQ"), // Store location for current question indicator element 
 	questionsNumber = document.getElementById("qN"), // Store location for questions number indicator element
 	questionElement = document.getElementById("question"), // Store location for question container element
 	answers = document.getElementById("answers"), // Store location for answers container
-	errorContainer = document.getElementById("errorContainer"), // Store location of error container 
-	submitButton = document.getElementById("send"), // Store location for submit button
+	errorContainer = document.getElementById("errorContainer"), // Store location of error container
+	buttonsContainer = document.getElementById("buttonsContainer"),
+	submitButton = document.getElementById("next"), // Store location for submit button
 	questionNo = 0, // Set initial question to 0;
+	userAnswers = [], // store user answers in an array
 	correctAnswers = 0; // Set correct answers to 0
+
+var backButton = document.createElement("button");
+var backText = document.createTextNode("Inapoi");
+backButton.appendChild(backText);
+backButton.setAttribute('id','prev');
 
 // write questions number
 questionsNumber.textContent = quizzQuestions.length;
@@ -34,7 +41,6 @@ function insertAnswers(qNo) {
 
 // populate quizz
 function populateQuizz() {
-	console.log(questionNo);
 	
 	var url = "url(" + quizzQuestions[questionNo].img + ")"; // store the url for feat-photo
 	featPhoto.style.backgroundImage = url; // set the url for feat-photo
@@ -46,29 +52,64 @@ function populateQuizz() {
 	answers.innerHTML = insertAnswers(questionNo); // insert answers
 
 	questionNo += 1; // upgrade question number
+	if (questionNo >= 2) {
+		insertBackBtn();
+	}
+	// select answer if exists
+	selectAnswer();
+	console.log(userAnswers);
+}
+
+function insertBackBtn() {
+	buttonsContainer.insertBefore(backButton, submitButton);
+}
+
+function goBack() {
+	if (questionNo === 2) {
+		questionNo = 0;
+		buttonsContainer.removeChild(backButton);
+	} else {
+		questionNo -= 2;	
+	}
+	console.log(questionNo);
+	populateQuizz();
+	selectAnswer();
+	console.log('back');
+	console.log(userAnswers);
 }
 
 // get user answers
 function getUserAnswer() {
-	console.log("user answer");
-
 	// answer inputs
 	var answers = quizz.answer; // store the answers array
-	console.log(answers);
 	var userAnswer = quizz.answer.value; // store the value of the selected answer
-	var userAnswerId = "";
 	console.log(userAnswer);
-
+	var userAnswerId = "";
+	
 	for (var i = 0; i < answers.length; i ++) { // identify the id of the selected answer
 		if (userAnswer == answers[i].value) {
 			userAnswerId = answers[i].id.slice(-1); // store only the number from the id
-			console.log(userAnswerId + " answer id");
 		}
 	}
 
-	if (userAnswerId == quizzQuestions[questionNo-1].correctAnswer) { // check if the selected answer was the correct one
-		correctAnswers++;
-		console.log(correctAnswers + " raspuns corect");
+	userAnswers[questionNo - 1] = userAnswerId;
+}
+
+// restore user answer
+function selectAnswer() {
+	var answers = quizz.answer;
+	if (userAnswers[questionNo - 1]) {
+		answers[userAnswers[questionNo - 1]].checked = true; 
+	}
+}
+
+// verify user answers
+
+function verifyAnswers() {
+	for (var i = 0; i < quizzQuestions.length; i++) {
+		if (userAnswers[i] == quizzQuestions[i].correctAnswer) {
+			correctAnswers++;
+		}
 	}
 }
 
@@ -98,14 +139,17 @@ populateQuizz();
 submitButton.addEventListener('click', function(e) {
 	e.preventDefault();
 
-	errorContainer.textContent = ""; // delete error message
+	errorContainer.innerHTML = ""; // delete error message
 	console.log (quizz.answer.value);
 	
 	if (quizz.answer.value == "") { // check if the user submited an answer before clicking the button
-		errorContainer.textContent = "Selectează un răspuns!";
+		errorContainer.innerHTML = "<p>Selectează un răspuns!</p>";
 	} else {
+		errorContainer.innerHTML = "";
 		if (questionNo == quizzQuestions.length) { // check if last question
 			getUserAnswer();
+			console.log(userAnswers);
+			verifyAnswers();
 			document.getElementById("quizzContent").innerHTML = '<div class="message-container">' + generateMessage(correctAnswers) + '</div>';
 		} else {
 			getUserAnswer();
@@ -113,4 +157,15 @@ submitButton.addEventListener('click', function(e) {
 		}
 	}
 });
+
+backButton.addEventListener('click', function(e) {
+	e.preventDefault();
+	if (errorContainer.innerHTML) {
+		errorContainer.innerHTML = "";
+	}
+	getUserAnswer();
+	goBack();
+})
+
+
 
