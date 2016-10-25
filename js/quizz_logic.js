@@ -78,19 +78,22 @@ function goBack() {
 	console.log(userAnswers);
 }
 
-// get user answers
-function getUserAnswer() {
+// see if any answer
+function ifAnswer() {
 	// answer inputs
-	var answers = quizz.answer; // store the answers array
-	var userAnswer = quizz.answer.value; // store the value of the selected answer
-	console.log(userAnswer);
-	var userAnswerId = "";
-	
+	var answers = quizz.answer, // store the answers array
+		userAnswer;
+
 	for (var i = 0; i < answers.length; i ++) { // identify the id of the selected answer
-		if (userAnswer == answers[i].value) {
-			userAnswerId = answers[i].id.slice(-1); // store only the number from the id
+		if (answers[i].checked) {
+			return answers[i].id.slice(-1); // store only the number from the id
 		}
 	}
+}
+
+// get user answers
+function getUserAnswer() {
+	var userAnswerId = ifAnswer();
 
 	userAnswers[questionNo - 1] = userAnswerId;
 }
@@ -104,7 +107,6 @@ function selectAnswer() {
 }
 
 // verify user answers
-
 function verifyAnswers() {
 	for (var i = 0; i < quizzQuestions.length; i++) {
 		if (userAnswers[i] == quizzQuestions[i].correctAnswer) {
@@ -140,9 +142,8 @@ submitButton.addEventListener('click', function(e) {
 	e.preventDefault();
 
 	errorContainer.innerHTML = ""; // delete error message
-	console.log (quizz.answer.value);
 	
-	if (quizz.answer.value == "") { // check if the user submited an answer before clicking the button
+	if (!ifAnswer()) { // check if the user submited an answer before clicking the button
 		errorContainer.innerHTML = "<p>Selectează un răspuns!</p>";
 	} else {
 		errorContainer.innerHTML = "";
